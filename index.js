@@ -43,7 +43,7 @@ var gpio = {
 };
 
 module.exports = function(homebridge) {
-    console.log("homebridge-gpio-device API version: " + homebridge.version);
+    //console.log("homebridge-gpio-device API version: " + homebridge.version);
 
     // Accessory must be created from PlatformAccessory Constructor
     Accessory = homebridge.platformAccessory;
@@ -513,7 +513,13 @@ function RollerShutter(accesory, log, config) {
 	if (config.pins.length == 3) 
 		this.stopPin = config.pins[2];
 	this.restoreTarget = config.restoreTarget || false;
-	this.shiftDuration = (config.shiftDuration || 20) * 10; // Shift duration in ms for a move of 1%
+	if(config.shiftDuration) {
+		this.openingDuration = config.shiftDuration * 10;
+		this.closingDuration = config.shiftDuration * 10;
+	} else {
+		this.openingDuration = (config.openingDuration || 10) * 10;
+		this.closingDuration = (config.closingDuration || 10) * 10;
+	}
 	this.pulseDuration = config.pulseDuration !== undefined ? config.pulseDuration : 200;
 	this.invertStopPin = config.invertStopPin || false;
 	this.openSensorPin = config.openSensorPin !== undefined ? config.openSensorPin : null;
@@ -615,7 +621,8 @@ RollerShutter.prototype = {
 				// Operation already in progress. Cancel timer and update computed current position
 				clearTimeout(this.shift.id);
 				this.shift.id = null;
-				var moved = Math.round(diff / this.shiftDuration);
+				var shiftDuration = (this.shift.value > 0) ? this.openingDuration : this.closingDuration;
+				var moved = Math.round(diff / shiftDuration);
 				currentPos += Math.sign(this.shift.value) * moved;
 				this.positionCharac.updateValue(this.minMax(currentPos));
 			} else {
@@ -632,7 +639,8 @@ RollerShutter.prototype = {
 		}
 		this.shift.value = newShiftValue;
 		this.shift.target = value;
-		var duration = Math.abs(this.shift.value) * this.shiftDuration;
+		var shiftDuration = (this.shift.value > 0) ? this.openingDuration : this.closingDuration;
+		var duration = Math.abs(this.shift.value) * shiftDuration;
 		this.shift.id = setTimeout(this.motionEnd.bind(this), duration);
 		callback();
 	},
