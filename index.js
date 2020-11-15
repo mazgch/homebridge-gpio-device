@@ -496,7 +496,7 @@ LockMechanism.prototype = {
 }
 
 function RollerShutter(accesory, log, config) {
-	if(config.pins.length != 2) throw new Error("'pins' parameter must contains 2 pin numbers");
+	if ((config.pins.length < 2) || (config.pins.length > 3)) throw new Error("'pins' parameter must contains 2 or 3 pin numbers");
 
 	this.log = log;
 
@@ -504,7 +504,8 @@ function RollerShutter(accesory, log, config) {
 	this.initPosition = config.initPosition || 99;
 	this.openPin = config.pins[0];
 	this.closePin = config.pins[1];
-	this.stopPin = config.pins[2];
+	if (config.pins.length == 3) 
+		this.stopPin = config.pins[2];
 	this.restoreTarget = config.restoreTarget || false;
 	this.shiftDuration = (config.shiftDuration || 20) * 10; // Shift duration in ms for a move of 1%
 	this.pulseDuration = config.pulseDuration !== undefined ? config.pulseDuration : 200;
