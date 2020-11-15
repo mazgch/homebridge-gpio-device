@@ -521,7 +521,7 @@ function RollerShutter(accesory, log, config) {
 	this.invertedInputs = config.invertedInputs || false;
 	this.postpone = config.postpone || 100;
 	this.pullUp = config.pullUp !== undefined ? config.pullUp : true;
-	this.openDrain = config.openDrain !== undefined ? config.openDrain : true;
+	this.openDrain = (config.openDrain !== undefined) ? config.openDrain : false;
 
 	this.OUTPUT_ACTIVE = this.inverted ? LOW : HIGH;
  	this.OUTPUT_INACTIVE = this.inverted ? HIGH : LOW;
@@ -542,7 +542,7 @@ function RollerShutter(accesory, log, config) {
 		gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
 		gpio.init(this.closePin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
 		if (this.stopPin !== null) {
-			gpio.init(this.stopPin, gpio.OUTPUT, this.OUTPUT_INACTIVE, );
+			gpio.init(this.stopPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
 		}
 	}
 		
