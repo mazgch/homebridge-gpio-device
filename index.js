@@ -651,8 +651,7 @@ RollerShutter.prototype = {
 
 	pinPulse: function(shiftValue, start) {
 		var pin = shiftValue > 0 ? this.openPin : this.closePin;
-		var pin = (this.stopPin != null) ? this.stopPin : 
-					  (this.shift.value > 0) ? this.closePin : this.openPin;
+		var pin = (this.shift.value > 0) ? this.closePin : this.openPin;
 		this.shift.start = Date.now();
 		if(this.pulseDuration) {
 			this.log('Pulse pin ' + pin);
