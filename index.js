@@ -623,10 +623,14 @@ RollerShutter.prototype = {
 
 	motionEnd: function() {
 		if(this.shift.target < 100 && this.shift.target > 0) {
-			if(this.invertStopPin === true) {
+			if(this.stopPin === true) {
+				gpio.write(this.stopPin, this.OUTPUT_ACTIVE);
+				gpio.delay(this.pulseDuration);
+				gpio.write(this.stopPin, this.OUTPUT_INACTIVE);
+				this.log("Pulse pin "+this.stopPin+" to stop motion");
+			} else if(this.invertStopPin === true) {
 				// stop shutter by pulsing the opposite pin
-				var pin = (this.stopPin != null) ? this.stopPin : 
-					  (this.shift.value > 0) ? this.closePin : this.openPin;
+				var pin = (this.shift.value > 0) ? this.closePin : this.openPin;
 				gpio.write(pin, this.OUTPUT_ACTIVE);
 				gpio.delay(this.pulseDuration);
 				gpio.write(pin, this.OUTPUT_INACTIVE);
@@ -651,7 +655,7 @@ RollerShutter.prototype = {
 
 	pinPulse: function(shiftValue, start) {
 		var pin = shiftValue > 0 ? this.openPin : this.closePin;
-		var pin = (this.shift.value > 0) ? this.closePin : this.openPin;
+		var oppositePin = (this.shift.value > 0) ? this.closePin : this.openPin;
 		this.shift.start = Date.now();
 		if(this.pulseDuration) {
 			this.log('Pulse pin ' + pin);
