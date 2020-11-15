@@ -536,7 +536,7 @@ function RollerShutter(accesory, log, config) {
 		gpio.init(this.openPin, gpio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.openPin));
 		gpio.init(this.closePin, gpio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.closePin));
 		if (this.stopPin !== null) {
-			gpio.init(this.stopPin, pio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.stopPin));
+			gpio.init(this.stopPin, gpio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.stopPin));
 		}
 	} else {
 		gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
