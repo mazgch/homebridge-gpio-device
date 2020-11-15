@@ -736,17 +736,12 @@ function GarageDoor(accesory, log, config) {
 	this.service = new Service[config.type](config.name);
 
 	if(config.pin === undefined) {
-		if (config.pins.length < 2 || config.pins.length > 3) throw new Error("'pins' parameter must contains 2 or 3 pin numbers");
+	 	if(config.pins.length != 2) throw new Error("'pins' parameter must contains 2 pin numbers");
 		this.openPin = config.pins[0];
-		this.closePin = config.pins[1];
-		
-		gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
-		gpio.init(this.closePin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
-		
-		if (config.pins.length > 2) {
-			this.stopPin = config.pins[2];
-			gpio.init(this.stopPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
-		}
+ 		this.closePin = config.pins[1];
+
+ 		gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
+ 		gpio.init(this.closePin, gpio.OUTPUT, this.OUTPUT_INACTIVE)
 	} else {
 		this.togglePin = config.pin;
 
