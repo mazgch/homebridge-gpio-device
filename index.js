@@ -8,13 +8,16 @@ const LOW = Gpio.LOW;
 var gpio = {
 	INPUT: 'in',
 	OUTPUT: 'out',
+	OPENDRAIN: 'od',
 	INT_EDGE_BOTH: 'both',
 	INT_EDGE_FALLING: 'falling',
 	INT_EDGE_RISING: 'rising',
 	io: [],
+	od: [],
 	init: function(pin, direction, edge, callback, pull) {
-		if(direction == this.INPUT) {
-			this.io[pin] = new Gpio(pin, direction, edge, {debounceTimeout: 10});
+		if (direction != this.OUTPUT) {
+			this.od[pin] = (direction = this.OPENDRAIN);
+			this.io[pin] = new Gpio(pin, this.INPUT, edge, {debounceTimeout: 10});
 			this.io[pin].watch(callback);
 		} else {
 			this.io[pin] = new Gpio(pin, direction);
@@ -24,7 +27,10 @@ var gpio = {
 		return this.io[pin].readSync();
 	},
 	write: function(pin, value) {
-		return this.io[pin].writeSync(value);
+		if (this.od[pin]) 
+			this.io[pin].setDirection((value == Gpio.LOW) ? 'low' : this.INPUT);
+		else 
+			return this.io[pin].writeSync(value);
 	},
 	delay: function(milliseconds) {
 		var start = new Date().getTime();
@@ -501,7 +507,7 @@ function RollerShutter(accesory, log, config) {
 	this.log = log;
 
 	this.inverted = config.inverted || false;
-	this.initPosition = config.initPosition || 99;
+	this.initPosition = config.initPosition || 100;
 	this.openPin = config.pins[0];
 	this.closePin = config.pins[1];
 	if (config.pins.length == 3) 
@@ -515,6 +521,7 @@ function RollerShutter(accesory, log, config) {
 	this.invertedInputs = config.invertedInputs || false;
 	this.postpone = config.postpone || 100;
 	this.pullUp = config.pullUp !== undefined ? config.pullUp : true;
+	this.openDrain = config.openDrain !== undefined ? config.openDrain : true;
 
 	this.OUTPUT_ACTIVE = this.inverted ? LOW : HIGH;
  	this.OUTPUT_INACTIVE = this.inverted ? HIGH : LOW;
@@ -525,11 +532,20 @@ function RollerShutter(accesory, log, config) {
 	this.service = new Service[config.type](config.name);
 	this.shift = {id:null, start:0, value:0, target:0};
 
-	gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
-	gpio.init(this.closePin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
-	if (this.stopPin !== null) {
-	    	gpio.init(this.stopPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
+	if (this.openDrain) {
+		gpio.init(this.openPin, gpio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.openPin));
+		gpio.init(this.closePin, gpio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.closePin));
+		if (this.stopPin !== null) {
+			gpio.init(this.stopPin, pio.OPENDRAIN, gpio.INT_EDGE_FALLING, this.stateChange.bind(this, this.stopPin));
+		}
+	} else {
+		gpio.init(this.openPin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
+		gpio.init(this.closePin, gpio.OUTPUT, this.OUTPUT_INACTIVE);
+		if (this.stopPin !== null) {
+			gpio.init(this.stopPin, gpio.OUTPUT, this.OUTPUT_INACTIVE, );
+		}
 	}
+		
 	this.stateCharac = this.service.getCharacteristic(Characteristic.PositionState)
 		.updateValue(Characteristic.PositionState.STOPPED);
 	this.positionCharac = this.service.getCharacteristic(Characteristic.CurrentPosition);
@@ -698,6 +714,12 @@ RollerShutter.prototype = {
 					}
 					this.stateCharac.updateValue(state == this.INPUT_ACTIVE ? Characteristic.PositionState.STOPPED : Characteristic.PositionState.DECREASING);
 					this.log("openSensorPin state change " + state);
+				} else if(pin === this.closePin) {
+					
+				} else if(pin === this.openPin) {
+					
+				} else if(pin === this.stopPin) {
+					
 				} else {
 					this.targetCharac.updateValue(this.initState);
 					this.positionCharac.updateValue(this.initState);
